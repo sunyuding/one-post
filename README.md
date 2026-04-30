@@ -1,25 +1,34 @@
 # one-post
 
-> Post to Facebook & Instagram from Claude Code. No API tokens, no developer accounts.
+> Post to Facebook & Instagram from any MCP client. No API tokens, no developer accounts.
 >
-> 从 Claude Code 直接发 Facebook / Instagram。无需 API token，无需开发者帐号。
+> 从任何 MCP 客户端直接发 Facebook / Instagram。无需 API token，无需开发者帐号。
 >
-> 從 Claude Code 直接發 Facebook / Instagram。無需 API token，無需開發者帳號。
+> 從任何 MCP 客戶端直接發 Facebook / Instagram。無需 API token，無需開發者帳號。
+
+### Supported Clients | 支持的客户端
+
+| Client | Type | MCP Config |
+|---|---|---|
+| **Claude Code** | CLI | `claude mcp add` |
+| **Codex CLI** | CLI | `codex mcp add` |
+| **Claude Desktop** | Desktop App | `claude_desktop_config.json` |
+| **Codex Desktop** | Desktop App | `~/.codex/config.toml` (shared with CLI) |
 
 ## How it works
 
 ```
-Claude Code  ──MCP stdio──>  social-mcp (Python FastMCP)
-                                  │
-                            Playwright CDP
-                                  │
-                                  v
-                         Chrome (port 9333)
-                         SocialMCP profile
-                                  │
-                                  v
-                          facebook.com
-                        (logged-in session)
+Any MCP Client  ──MCP stdio──>  social-mcp (Python FastMCP)
+                                      │
+                                Playwright CDP
+                                      │
+                                      v
+                             Chrome (port 9333)
+                             SocialMCP profile
+                                      │
+                                      v
+                              facebook.com
+                            (logged-in session)
 ```
 
 - **No API tokens** — uses Chrome DevTools Protocol to control a real browser
@@ -56,7 +65,7 @@ See [social-media-setup-guide.md](social-media-setup-guide.md) for step-by-step 
 
 ## Usage | 使用方法
 
-After setup, say any of these in Claude Code:
+After setup, say any of these in your MCP client:
 
 | Language | Command |
 |---|---|
@@ -70,16 +79,20 @@ After setup, say any of these in Claude Code:
 |---|---|
 | [uv](https://docs.astral.sh/uv/) | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 | [Google Chrome](https://www.google.com/chrome) | Download from website |
-| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | `npm install -g @anthropic-ai/claude-code` |
+| An MCP client (at least one): | |
+| - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | `npm install -g @anthropic-ai/claude-code` |
+| - [Codex CLI](https://developers.openai.com/codex/cli) | `npm install -g @openai/codex` |
+| - [Claude Desktop](https://claude.ai/download) | Download from website |
+| - [Codex Desktop](https://developers.openai.com/codex) | Download from website |
 
 ## Setup Steps | 设置步骤 | 設定步驟
 
 1. **Clone & install** — Clone social-mcp, install dependencies
 2. **Patch bugs** — Fix missing import + add multi-locale selectors
-3. **Register MCP** — `claude mcp add social`
+3. **Register MCP** — Register with your client (Claude Code / Codex / Desktop)
 4. **Login once** — Open Chrome, log in to Facebook, close browser
 5. **Launch CDP** — Start Chrome with remote debugging on port 9333
-6. **Restart Claude Code** — Reconnect with patched MCP server
+6. **Restart your client** — Reconnect with patched MCP server
 
 See [SKILL.md](one-post/SKILL.md) for detailed instructions.
 
@@ -93,7 +106,7 @@ See [SKILL.md](one-post/SKILL.md) for detailed instructions.
 | `Timeout 15000ms exceeded` | `pkill -f SocialMCP`, clear locks, relaunch |
 | `No Facebook page found` | Navigate Chrome to facebook.com |
 | `Not logged in` | Redo Step 4 (login) |
-| MCP tool not found | `claude mcp add social -- uv run --project ~/Projects/social-mcp social-mcp` |
+| MCP tool not found | Re-register: `claude mcp add social -- ...` or `codex mcp add social -- ...` or edit Desktop config |
 
 ## Project Structure
 
@@ -101,7 +114,6 @@ See [SKILL.md](one-post/SKILL.md) for detailed instructions.
 one-post/
 ├── README.md                          # This file
 ├── social-media-setup-guide.md        # Full setup guide
-├── social-media-setup-guide.pdf       # PDF version
 └── one-post/                          # Claude Code skill
     ├── SKILL.md                       # Skill definition
     ├── install.sh                     # One-click installer

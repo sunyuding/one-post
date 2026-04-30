@@ -1,7 +1,8 @@
-# Social MCP Setup Guide (for Claude Code)
+# Social MCP Setup Guide
 
-> Give this file to a fresh Claude Code session and say **"follow this guide to set up social-mcp"**.
-> Claude Code will execute every step. After setup you can say "post to Facebook: ..." to publish.
+> Give this file to a fresh Claude Code / Codex CLI session and say **"follow this guide to set up social-mcp"**.
+> It will execute every step. After setup you can say "post to Facebook: ..." to publish.
+> Also works with Claude Desktop and Codex Desktop.
 
 ---
 
@@ -16,8 +17,8 @@ uv --version || echo "MISSING: install with: curl -LsSf https://astral.sh/uv/ins
 # Check Chrome
 ls "/Applications/Google Chrome.app" || echo "MISSING: install Google Chrome"
 
-# Check Claude Code
-claude --version || echo "MISSING: install with: npm install -g @anthropic-ai/claude-code"
+# Check Claude Code or Codex CLI (at least one needed)
+claude --version || codex --version || echo "MISSING: install Claude Code or Codex CLI"
 ```
 
 ---
@@ -214,18 +215,36 @@ async def post_facebook(message: str):
         return "Post may have been published. Check your Facebook wall."
 ```
 
-## Step 3: Register MCP with Claude Code
+## Step 3: Register MCP
 
+Pick the client(s) you use:
+
+**Claude Code (CLI):**
 ```bash
 claude mcp add social -- uv run --project ~/Projects/social-mcp social-mcp
+claude mcp list   # Should show "social"
 ```
 
-Verify:
-
+**Codex CLI / Codex Desktop** (shared config):
 ```bash
-claude mcp list
-# Should show "social" in the output
+codex mcp add social -- uv run --project ~/Projects/social-mcp social-mcp
+codex mcp list    # Should show "social"
 ```
+
+**Claude Desktop:**
+
+Open Settings > Developer > Edit Config, add to `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "social": {
+      "command": "uv",
+      "args": ["run", "--project", "/Users/YOU/Projects/social-mcp", "social-mcp"]
+    }
+  }
+}
+```
+Replace `/Users/YOU` with your home directory. Save and restart Claude Desktop.
 
 ## Step 4: First-time Facebook login (manual, one-time)
 
@@ -268,12 +287,12 @@ for i in $(seq 1 10); do
 done
 ```
 
-## Step 6: Restart Claude Code
+## Step 6: Restart your client
 
-```bash
-# Exit current session, then start fresh
-claude
-```
+- **Claude Code:** `/exit` then `claude`
+- **Codex CLI:** exit then `codex`
+- **Claude Desktop:** Quit and reopen the app
+- **Codex Desktop:** Quit and reopen the app
 
 The `social` MCP tools (`post_facebook`, `open_login_window`, `read_messenger`, `read_notifications`) will now be available.
 
@@ -298,14 +317,14 @@ Say any of:
 | `Timeout 15000ms exceeded` | Multiple Chrome instances. Run: `pkill -f SocialMCP`, clear locks, relaunch one. |
 | `No Facebook page found` | Chrome is open but not on facebook.com. Navigate there manually. |
 | `Not logged in` | Session expired. Redo Step 4. |
-| MCP tool not found | Run `claude mcp add social -- uv run --project ~/Projects/social-mcp social-mcp` and restart. |
+| MCP tool not found | Re-register MCP (Step 3) and restart your client. |
 
 ---
 
 ## Architecture
 
 ```
-Claude Code  ──MCP stdio──►  social-mcp (Python FastMCP)
+MCP Client   ──MCP stdio──►  social-mcp (Python FastMCP)
                                   │
                             Playwright CDP
                                   │

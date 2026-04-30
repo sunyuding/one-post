@@ -1,42 +1,46 @@
 name: one-post
-description: Set up social-mcp to post to Facebook/Instagram from Claude Code via Chrome CDP. No API tokens needed.
+description: Set up social-mcp to post to Facebook/Instagram from Claude Code or Codex CLI via Chrome CDP. No API tokens needed.
 trigger: >
   User says "setup social-mcp", "install social mcp", "set up facebook posting",
   "configure social posting", "one-post setup", "设置 social-mcp", "安装 social mcp",
   "設定 social-mcp", "安裝 social mcp", or any variation asking to set up
-  social media posting through Claude Code.
+  social media posting through Claude Code or Codex CLI.
 ---
 
 # one-post
 
-> Post to Facebook and Instagram from Claude Code. No API tokens, no developer accounts.
+> Post to Facebook and Instagram from Claude Code or Codex CLI. No API tokens, no developer accounts.
 >
-> 从 Claude Code 直接发 Facebook / Instagram。无需 API token，无需开发者帐号。
+> 从 Claude Code / Codex CLI 直接发 Facebook / Instagram。无需 API token，无需开发者帐号。
 >
-> 從 Claude Code 直接發 Facebook / Instagram。無需 API token，無需開發者帳號。
+> 從 Claude Code / Codex CLI 直接發 Facebook / Instagram。無需 API token，無需開發者帳號。
 
 ## When to use
 
 - User says "setup social-mcp" / "install social mcp" / "set up facebook posting"
 - User says "设置 social-mcp" / "安装 social mcp" / "设置脸书发文"
 - User says "設定 social-mcp" / "安裝 social mcp" / "設定臉書發文"
-- User wants to post to Facebook or Instagram from Claude Code
+- User wants to post to Facebook or Instagram from Claude Code or Codex CLI
 - User shares this skill or mentions one-post / social-mcp
 
 ## Prerequisites
 
-Before running, verify all three are installed:
+Before running, verify these are installed:
 
 ```bash
-uv --version        # Python package manager
-ls "/Applications/Google Chrome.app"  # Chrome browser (macOS only)
-claude --version     # Claude Code CLI
+uv --version        # Python package manager (required)
+ls "/Applications/Google Chrome.app"  # Chrome browser, macOS only (required)
+claude --version     # Claude Code CLI (one of these two)
+codex --version      # Codex CLI         (one of these two)
 ```
 
 If any is missing, tell the user how to install it and stop:
 - uv: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - Chrome: Download from https://www.google.com/chrome
 - Claude Code: `npm install -g @anthropic-ai/claude-code`
+- Codex CLI: `npm install -g @openai/codex`
+
+At least one of Claude Code or Codex CLI must be installed.
 
 ## Setup Steps
 
@@ -75,15 +79,36 @@ The patched function:
 
 ### Step 3: Register MCP | 注册 MCP | 註冊 MCP
 
+Pick the client(s) you use:
+
+**Claude Code (CLI):**
 ```bash
 claude mcp add social -- uv run --project ~/Projects/social-mcp social-mcp
+claude mcp list   # Should show "social"
 ```
 
-Verify:
+**Codex CLI / Codex Desktop** (they share the same config):
 ```bash
-claude mcp list
-# Should show "social" in the output
+codex mcp add social -- uv run --project ~/Projects/social-mcp social-mcp
+codex mcp list    # Should show "social"
 ```
+
+**Claude Desktop:**
+
+Open Settings > Developer > Edit Config, then add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "social": {
+      "command": "uv",
+      "args": ["run", "--project", "/Users/YOU/Projects/social-mcp", "social-mcp"]
+    }
+  }
+}
+```
+
+Replace `/Users/YOU` with your actual home directory path. Save and restart Claude Desktop.
 
 ### Step 4: First-time login (requires user action) | 首次登录 | 首次登入
 
@@ -134,9 +159,13 @@ for i in $(seq 1 10); do
 done
 ```
 
-### Step 6: Restart Claude Code | 重启 Claude Code | 重啟 Claude Code
+### Step 6: Restart your client | 重启客户端 | 重啟客戶端
 
-Tell the user to restart Claude Code (`/exit` then `claude`) so the MCP server reconnects with the patched code.
+Tell the user to restart their client so the MCP server reconnects with the patched code:
+- **Claude Code:** `/exit` then `claude`
+- **Codex CLI:** exit then `codex`
+- **Claude Desktop:** Quit and reopen the app
+- **Codex Desktop:** Quit and reopen the app
 
 ## After Setup | 设置完成后 | 設定完成後
 
@@ -155,7 +184,7 @@ The user can now say:
 | `Timeout 15000ms exceeded` | Multiple Chrome instances. Run: `pkill -f SocialMCP`, clear locks, relaunch. |
 | `No Facebook page found` | Chrome is open but not on facebook.com. Navigate there manually. |
 | `Not logged in` | Session expired. Redo Step 4. |
-| MCP tool not found | Re-run Step 3 and restart Claude Code. |
+| MCP tool not found | Re-run Step 3 and restart your CLI. |
 
 ## Do NOT | 禁止事项 | 禁止事項
 

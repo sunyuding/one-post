@@ -21,9 +21,18 @@ info "Checking prerequisites..."
 
 command -v uv >/dev/null 2>&1 || error "uv not found. Install: curl -LsSf https://astral.sh/uv/install.sh | sh"
 [ -d "/Applications/Google Chrome.app" ] || error "Google Chrome not found. Install from https://www.google.com/chrome"
-command -v claude >/dev/null 2>&1 || error "Claude Code not found. Install: npm install -g @anthropic-ai/claude-code"
+HAS_CLAUDE=false
+HAS_CODEX=false
+command -v claude >/dev/null 2>&1 && HAS_CLAUDE=true
+command -v codex  >/dev/null 2>&1 && HAS_CODEX=true
+
+if ! $HAS_CLAUDE && ! $HAS_CODEX; then
+    error "No MCP client found. Install at least one:\n  Claude Code: npm install -g @anthropic-ai/claude-code\n  Codex CLI:   npm install -g @openai/codex"
+fi
 
 info "All prerequisites found."
+$HAS_CLAUDE && info "  Found: Claude Code (CLI)"
+$HAS_CODEX  && info "  Found: Codex CLI"
 
 # ── Step 1: Clone & install ────────────────────────────────
 SOCIAL_MCP_DIR="$HOME/Projects/social-mcp"
@@ -67,8 +76,31 @@ else
 fi
 
 # ── Step 3: Register MCP ─────────────────────────────────
-info "Registering social MCP with Claude Code..."
-claude mcp add social -- uv run --project "$SOCIAL_MCP_DIR" social-mcp 2>/dev/null || true
+info "Registering social MCP..."
+
+if $HAS_CLAUDE; then
+    claude mcp add social -- uv run --project "$SOCIAL_MCP_DIR" social-mcp 2>/dev/null || true
+    info "Registered with Claude Code."
+fi
+
+if $HAS_CODEX; then
+    codex mcp add social -- uv run --project "$SOCIAL_MCP_DIR" social-mcp 2>/dev/null || true
+    info "Registered with Codex CLI / Codex Desktop."
+fi
+
+# Check for Claude Desktop config
+CLAUDE_DESKTOP_CONFIG="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+if [ -d "$HOME/Library/Application Support/Claude" ]; then
+    if [ ! -f "$CLAUDE_DESKTOP_CONFIG" ] || ! grep -q "social" "$CLAUDE_DESKTOP_CONFIG" 2>/dev/null; then
+        warn "Claude Desktop detected but MCP not configured."
+        warn "Open Settings > Developer > Edit Config and add:"
+        echo ""
+        echo '  {"mcpServers":{"social":{"command":"uv","args":["run","--project","'"$SOCIAL_MCP_DIR"'","social-mcp"]}}}'
+        echo ""
+    else
+        info "Claude Desktop already configured."
+    fi
+fi
 
 # ── Step 4: Create Chrome profile ─────────────────────────
 CHROME_PROFILE="$HOME/Library/Application Support/Google/Chrome/SocialMCP"
@@ -130,12 +162,13 @@ fi
 echo ""
 info "=== Setup complete! ==="
 echo ""
-echo "  Restart Claude Code (/exit then claude), then say:"
-echo "    post to Facebook: Hello world!"
+echo "  Restart your client, then say: post to Facebook: Hello world!"
 echo ""
-echo "  重启 Claude Code（/exit 然后 claude），然后说："
-echo "    发 Facebook: 你好世界！"
+if $HAS_CLAUDE; then echo "  Claude Code:    /exit → claude"; fi
+if $HAS_CODEX;  then echo "  Codex CLI:      exit  → codex"; fi
+echo "  Claude Desktop: Quit  → Reopen"
+echo "  Codex Desktop:  Quit  → Reopen"
 echo ""
-echo "  重啟 Claude Code（/exit 然後 claude），然後說："
-echo "    發 Facebook: 你好世界！"
+echo "  重启客户端后说：发 Facebook: 你好世界！"
+echo "  重啟客戶端後說：發 Facebook: 你好世界！"
 echo ""
